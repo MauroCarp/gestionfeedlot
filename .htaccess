@@ -1,0 +1,6 @@
+RewriteEngine on
+
+# Redirigir todas las peticiones a public/ si no existe el archivo/carpeta
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]

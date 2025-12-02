@@ -1,0 +1,443 @@
+
+<div class="row-fluid">
+
+	<div class="span12">
+
+		<div id="canvas-holder" style="width:100%;display: inline-block;">
+
+			<canvas id="canvasMuertes"></canvas>
+
+		</div>
+
+	</div>
+
+</div>
+
+
+<!-- COMPARACION
+<div class="row-fluid">
+
+	<div class="span6">
+
+		<div id="canvas-holder" style="width:100%;display: inline-block;vertical-align: top;">
+
+			<canvas id="chart-areaTipo"></canvas>
+
+		</div>
+
+	</div>
+
+	<div class="span6">
+
+		<div id="canvas-holder" style="width:100%;display: inline-block;vertical-align: top;">
+
+			<canvas id="chart-areaCompTipo"></canvas>
+
+		</div>
+
+	</div>
+
+</div>
+
+
+<div class="row-fluid">
+
+	<div class="span6">
+
+		<div id="canvas-holder" style="width:100%;display: inline-block;">
+
+			<canvas id="canvasMuertes"></canvas>
+
+		</div>
+
+	</div>
+
+	<div class="span6">
+
+		<div id="canvas-holder" style="width:100%;display: inline-block;">
+
+			<canvas id="canvasMuertesComp"></canvas>
+
+		</div>
+
+	</div>
+
+</div> -->
+
+<script type="text/javascript">
+
+	// TIPO
+		let configTipo = {
+			type: 'pie',
+			data: {
+				datasets: [{
+					data: [
+					<?php
+
+					$cantMuertes = 0;
+
+					$labelsMuertes = "";
+
+					$colores = array();
+
+					$sqlTipo = "SELECT DISTINCT causaMuerte FROM muertes WHERE feedlot = '$feedlot' AND fecha BETWEEN '$desde' AND '$hasta' ORDER BY causaMuerte ASC";
+
+					$queryTipo = mysqli_query($conexion,$sqlTipo);
+
+
+					if (mysqli_num_rows($queryTipo)) {
+
+						$cantMuertes = array();
+
+						$labelsMuertes = array();
+
+						while($resultadoTipo = mysqli_fetch_array($queryTipo)){
+
+							$causa = $resultadoTipo['causaMuerte'];
+
+							$sql = "SELECT COUNT(*) as muertes FROM muertes WHERE feedlot = '$feedlot' AND causaMuerte = '$causa' AND fecha BETWEEN '$desde' AND '$hasta'";
+
+							$query = mysqli_query($conexion,$sql);
+
+							$cantidad = mysqli_fetch_array($query);
+
+							$colores[] = "'".color_rand()."'";
+
+							$labelsMuertes[] = "'".$causa."'";
+
+							$cantMuertes[] = $cantidad['muertes'];
+						}
+
+						$labelsMuertes = implode(',',$labelsMuertes);
+
+						$cantMuertes = implode(',',$cantMuertes);
+
+						$colores = implode(',',$colores);
+
+					}else{
+
+						$colores = '';
+
+					}
+					
+					echo $cantMuertes;
+					?>
+					],
+					backgroundColor: [
+					<?php echo $colores.",";?>
+					],
+					label: 'Tipo de Muerte'
+				}],
+				labels: [
+				<?php
+					echo $labelsMuertes;
+				?>
+				]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Muertes Segun Causa'
+				},
+				legend:{
+					display: true,
+					labels:{
+						boxWidth: 5
+					}
+				},
+				plugins:{
+					labels:{
+						render:'percentage',
+						fontColor: 'white'
+					}
+				}
+
+			}
+		};
+		
+	// MUERTES
+
+	   	let muertes = {
+	      type: 'line',
+	      data: {
+	        labels: [
+
+	        <?php
+	      	
+	        $labelsMuertes = "";
+			$cantidadMuertes = 0;
+			$sqlMuertes = "SELECT fecha,causaMuerte FROM muertes WHERE feedlot = '$feedlot' AND fecha BETWEEN '$desde' AND '$hasta' ORDER BY fecha ASC";
+
+			$queryMuertes = mysqli_query($conexion,$sqlMuertes);
+
+			if (!empty($queryMuertes)) {
+				
+				$arrayMuertes = array();
+
+				$fechaTemp = '';
+
+				while ($filaMuertes = mysqli_fetch_array($queryMuertes)) {
+
+					$fecha = formatearFecha($filaMuertes['fecha']);
+
+					if($fecha == $fechaTemp){
+
+						$arrayMuertes["'".$fecha."'"]++;
+						
+						$fechaTemp = $fecha;
+						
+					}else{
+						
+						$arrayMuertes["'".$fecha."'"] = 1;
+						
+						$fechaTemp = $fecha;
+					
+					}
+					
+				}
+
+				echo implode(',',array_keys($arrayMuertes));
+
+			}
+
+	        ?>
+
+	        ],
+	        datasets: [{
+	          label: 'Cantidad de Muertes por Fecha',
+	          backgroundColor: window.chartColors.red,
+	          borderColor: window.chartColors.red,
+	          data: [
+	            <?php
+				
+				echo implode(',',array_values($arrayMuertes));
+
+	            ?>
+	          ],
+	          fill: false,
+	        }]
+	      },
+	      options: {
+	        responsive: true,
+	        title: {
+	          display: true,
+	          text: 'Cantidad de Muertes'
+	        },
+	        tooltips: {
+	          mode: 'index',
+	          intersect: false,
+	        },
+	        hover: {
+	          mode: 'nearest',
+	          intersect: true
+	        },
+	        scales: {
+	          xAxes: [{
+	            display: true,
+	            scaleLabel: {
+	              display: true,
+	              labelString: 'Fecha'
+	            }
+	          }],
+	          yAxes: [{
+	            display: true,
+	            scaleLabel: {
+	              display: true,
+	              labelString: 'Cantidad'
+	            },
+				ticks:{
+					suggestedMin:0
+				}
+	          }]
+	        }
+	      }
+	    };
+
+	/*
+		// TIPO COMPARACION
+
+		let configTipoComp = {
+			type: 'pie',
+			data: {
+				datasets: [{
+					data: [
+					<?php
+
+						$cantMuertes = 0;
+
+						$labelsMuertes = "";
+						
+						$colores = "";
+						
+						$sqlTipoComp = "SELECT DISTINCT causaMuerte FROM muertes WHERE feedlot = '$feedlot' AND fecha BETWEEN '$desdeComp' AND '$hastaComp' ORDER BY causaMuerte ASC";
+
+						$queryTipoComp = mysqli_query($conexion,$sqlTipoComp);
+
+						$cantMuertesComp = array();
+
+						$coloresComp = array();
+
+						$labelsMuertesComp = array();
+
+						if (mysqli_num_rows($queryTipoComp)) {
+
+
+							while($resultadoTipoComp = mysqli_fetch_array($queryTipoComp)){
+
+								$causaComp = $resultadoTipoComp['causaMuerte'];
+
+								$sqlComp = "SELECT COUNT(tropa) as muertes FROM muertes WHERE feedlot = '$feedlot' AND causaMuerte = '$causaComp' AND fecha BETWEEN '$desdeComp' AND '$hastaComp'";
+
+								$queryComp = mysqli_query($conexion,$sqlComp);
+
+								$cantidadComp = mysqli_fetch_array($queryComp);
+
+								$coloresComp[] = "'".color_rand()."'";
+
+								$labelsMuertesComp[] = "'".$causaComp."'";
+
+								$cantMuertesComp[] = $cantidadComp['muertes'];
+
+							}
+
+							$labelsMuertesComp = implode(',',$labelsMuertesComp);
+							$cantMuertesComp = implode(',',$cantMuertesComp);
+							$coloresComp = implode(',',$coloresComp);
+							$coloresComp = $coloresComp.",";
+						
+						}else{
+
+							$labelsMuertesComp = '';
+							$cantMuertesComp = 0;
+							$coloresComp = '';
+
+						}
+
+						echo $cantMuertesComp;
+
+					?>
+					],
+					backgroundColor: [
+					<?php 
+						echo $coloresComp;
+					?>
+					],
+					label: 'Tipo de Muerte'
+				}],
+				labels: [
+				<?php
+					echo $labelsMuertesComp;
+				?>
+				]
+			},
+			options: {
+				responsive: true,
+				plugins:{
+					labels:{
+						render:'percentage',
+						fontColor:'white'
+					},
+				},
+				title: {
+					display: true,
+					text: 'Muertes Segun Causa'
+				},
+				legend:{
+					display: true,
+					labels:{
+						boxWidth: 5
+					}
+				}
+			}
+		};	
+
+
+		// MUERTES COMPARACION 
+		let muertesComp = {
+			type: 'line',
+			data: {
+			labels: [
+
+			<?php
+			
+		
+			$labelsMuertesComp = "";
+		
+			$cantidadMuertesComp = 0;
+		
+			$sqlMuertesComp = "SELECT fecha, causaMuerte, COUNT(*) as cantidad FROM muertes WHERE feedlot = '$feedlot' AND fecha BETWEEN '$desdeComp' AND '$hastaComp' ORDER BY fecha ASC";
+		
+			$queryMuertesComp = mysqli_query($conexion,$sqlMuertesComp);
+		
+			$totalMuertes = 0;
+
+			while ($filaMuertesComp = mysqli_fetch_array($queryMuertesComp)) {
+
+				$totalMuertes++;
+		
+				$cantidadMuertesComp = $cantidadMuertesComp.",".$filaMuertesComp['cantidad'];
+		
+				$labelsMuertesComp = $labelsMuertesComp.",'".formatearFecha($filaMuertesComp['fecha'])."'";
+		
+			}
+		
+			$labelsMuertesComp = substr($labelsMuertesComp,1);
+		
+			$cantidadMuertesComp = substr($cantidadMuertesComp, 2);
+		
+			echo $labelsMuertesComp;
+			?>
+
+			],
+			datasets: [{
+				label: 'Cantidad de Muertes por Fecha',
+				backgroundColor: window.chartColors.red,
+				borderColor: window.chartColors.red,
+				data: [
+				<?php
+				echo $cantidadMuertesComp;
+				?>
+				],
+				fill: false,
+			}]
+			},
+			options: {
+			responsive: true,
+			title: {
+				display: true,
+				text: 'Cantidad de Muertes'
+			},
+			tooltips: {
+				mode: 'index',
+				intersect: false,
+			},
+			hover: {
+				mode: 'nearest',
+				intersect: true
+			},
+			scales: {
+				xAxes: [{
+				display: true,
+				scaleLabel: {
+					display: true,
+					labelString: 'Fecha'
+				}
+				}],
+				yAxes: [{
+				display: true,
+				scaleLabel: {
+					display: true,
+					labelString: 'Cantidad'
+				},
+				ticks: {
+					suggestedMin: 0
+				}
+				}]
+			}
+			}
+		};
+	*/
+
+</script>
+

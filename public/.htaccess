@@ -1,0 +1,10 @@
+# Habilitar motor de reescritura
+RewriteEngine On
+
+# URLs limpias activadas (ej: /stock en lugar de index.php?route=stock)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_-]+)/?$ index.php?route=$1 [L,QSA]
+
+# Redirigir raíz /public/ a index sin parámetro (opcional)
+RewriteRule ^$ index.php [L,QSA]

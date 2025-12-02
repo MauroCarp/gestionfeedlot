@@ -1,0 +1,126 @@
+/* CSS personalizado para forzar visibilidad de controles DataTables con Bootstrap 2 */
+
+/* Contenedores de controles DataTables */
+.dataTables_wrapper {
+    clear: both;
+    margin: 10px 0;
+}
+
+.dataTables_wrapper .row-fluid {
+    margin-bottom: 10px;
+}
+
+.dataTables_wrapper .span6 {
+    float: left;
+    width: 48%;
+    margin-left: 2%;
+}
+
+.dataTables_wrapper .span6:first-child {
+    margin-left: 0;
+}
+
+/* Selector de longitud (entries per page) */
+.dataTables_length {
+    float: left;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.dataTables_length select {
+    width: auto;
+    display: inline-block;
+    margin: 0 5px;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* Campo de búsqueda */
+.dataTables_filter {
+    float: right;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    text-align: right;
+}
+
+.dataTables_filter input {
+    margin-left: 5px;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    width: 200px;
+}
+
+/* Información de registros */
+.dataTables_info {
+    float: left;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding-top: 8px;
+}
+
+/* Controles de paginación */
+.dataTables_paginate {
+    float: right;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    text-align: right;
+}
+
+.dataTables_paginate .paginate_button {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-left: 2px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 3px;
+    color: #333;
+    text-decoration: none;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: #428bca;
+    color: #fff;
+    border-color: #428bca;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Asegurar que la tabla sea responsive */
+.dataTables_wrapper table {
+    width: 100% !important;
+}
+
+/* Clearfix para row-fluid */
+.dataTables_wrapper .row-fluid:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Procesamiento */
+.dataTables_processing {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    z-index: 1000;
+}
