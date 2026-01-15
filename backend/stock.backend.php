@@ -262,6 +262,15 @@ $pesoTotalEgr = 0;
   $resultados = mysqli_fetch_array($queryIng);
 
   $cantIngConStockInicial = $resultados['cantidadConStockInicial'];
+  // Fallback: si no hay registros agregados, contar ingresos base
+  if ($cantIngConStockInicial == 0) {
+    $sqlIngFallback = "SELECT COUNT(*) AS c FROM ingresos WHERE feedlot = '$feedlot'";
+    $queryIngFallback = mysqli_query($conexion, $sqlIngFallback);
+    if ($queryIngFallback) {
+      $rowIngFallback = mysqli_fetch_array($queryIngFallback);
+      $cantIngConStockInicial = (int)($rowIngFallback['c'] ?? 0);
+    }
+  }
   
 
   // INGRESOS
@@ -304,6 +313,16 @@ $pesoTotalEgr = 0;
 
   };
 
+  // Fallback: si no hay registros agregados, contar egresos base
+  if ($cantEgr == 0) {
+    $sqlEgrFallback = "SELECT COUNT(*) AS c FROM egresos WHERE feedlot = '$feedlot'";
+    $queryEgrFallback = mysqli_query($conexion, $sqlEgrFallback);
+    if ($queryEgrFallback) {
+      $rowEgrFallback = mysqli_fetch_array($queryEgrFallback);
+      $cantEgr = (int)($rowEgrFallback['c'] ?? 0);
+    }
+  }
+
 
 
   $sqlMuertes = "SELECT COUNT(*) as cantidad FROM muertes WHERE feedlot = '$feedlot' ORDER BY fecha ASC";
@@ -329,16 +348,9 @@ $pesoTotalEgr = 0;
     $diferenciaIngEgr = $kgEgrProm - $kgIngProm;  
   }
 
-  if ($cantIngConStockInicial != 0) {
-    $stock += $cantIngConStockInicial;
-  }
-  
-  if ($cantEgr != 0 AND $stock != 0) {
-    $stock = ($stock - $cantEgr);   
-  }
-  if ($cantMuertes != 0 AND $stock != 0) {
-    $stock = ($stock - $cantMuertes); 
-  }
+  // Stock = ingresos totales - egresos - muertes
+  $stock = (int)$cantIngConStockInicial - (int)$cantEgr - (int)$cantMuertes;
+  if ($stock < 0) { $stock = 0; }
 
 $seccionValido = array_key_exists('seccion',$_REQUEST);
 if ($seccionValido) {

@@ -348,7 +348,6 @@ $kgMaxEgr = 0;
       $totalMuertesComp = $resultadoMuertesComp['totalMuertes'];
   }
 
-
 function color_rand() {
  return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
 }

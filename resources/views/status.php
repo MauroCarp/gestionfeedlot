@@ -35,13 +35,18 @@
             $tropaTemp = $resultado['tropa'];
             $fechaHoy = date("Y-m-d");
             $fechaHoy = new DateTime($fechaHoy);
-            $fechaRefuerzo = new DateTime($resultado['fechaRefuerzo']);
-            $diff = $fechaHoy->diff($fechaRefuerzo);
-            $diferenciaDias = $diff->days;
+            $fechaRefuerzoStr = isset($resultado['fechaRefuerzo']) ? $resultado['fechaRefuerzo'] : null;
+            if (!empty($fechaRefuerzoStr)) {
+              $fechaRefuerzo = new DateTime($fechaRefuerzoStr);
+              $diff = $fechaHoy->diff($fechaRefuerzo);
+              $diferenciaDias = $diff->days;
+            } else {
+              $diferenciaDias = 0;
+            }
 
             $otroTratamiento = json_decode('['.substr($resultado['otroTratamiento'],0,-1).']',true);
               
-            $ultimoTratamiento = ($otroTratamiento[0] != '' ) ? $otroTratamiento[0]['tratamiento'] : '-';
+            $ultimoTratamiento = (isset($otroTratamiento[0]) && $otroTratamiento[0] != '' ) ? $otroTratamiento[0]['tratamiento'] : '-';
 
 
             if ($resultado['refuerzo'] == 1 AND $diferenciaDias > 5) {

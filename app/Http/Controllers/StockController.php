@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\StockService;
+use App\Services\IngresosService;
 use App\Services\ReferenceService;
 
 class StockController {
@@ -30,6 +31,9 @@ class StockController {
 
         $fechaDeHoy = date('d-m-Y');
         $totals = $this->service->computeTotals($feedlot, $this->conexion);
+        // Listado de registroingresos para tabla DataTables en Stock
+        $ingService = new IngresosService($this->conexion);
+        $listado = $ingService->listar($feedlot, 0, 1000);
         $ref = new ReferenceService($this->conexion);
         $razasIng = $ref->razas($feedlot);
         $origenesIng = $ref->origenes($feedlot,'ingresos');
@@ -43,6 +47,7 @@ class StockController {
             'fechaDeHoy' => $fechaDeHoy,
             'seccion' => $seccion === '' ? 'ingreso' : $seccion,
             'conexion' => $this->conexion,
+            'listado' => $listado,
             'razasIngresos' => $razasIng,
             'origenesIngresos' => $origenesIng,
             'destinosIngresos' => $destinosIng,

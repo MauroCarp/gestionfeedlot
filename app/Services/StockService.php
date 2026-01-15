@@ -2,6 +2,7 @@
 namespace App\Services;
 
 class StockService {
+
     public function computeTotals(string $feedlot, \mysqli $conexion): array {
         $cantIng = 0;
         $cantEgr = 0;
@@ -15,12 +16,20 @@ class StockService {
         $kgMinEgr = 1000000;
         $kgMaxEgr = 0;
 
-        // Cantidad con Stock Inicial
+        // Total ingresos (incluye Stock Inicial). Fallback a tabla base si registroingresos está vacío
         $sql = "SELECT SUM(cantidad) AS cantidadConStockInicial FROM registroingresos WHERE feedlot = '$feedlot'";
         if($query = $conexion->query($sql)) {
             $row = $query->fetch_assoc();
             $cantIngConStockInicial = (int)($row['cantidadConStockInicial'] ?? 0);
         } else { $cantIngConStockInicial = 0; }
+        if ($cantIngConStockInicial === 0) {
+            // Fallback: contar animales en ingresos cuando no hay registros agregados
+            $sqlFallback = "SELECT COUNT(*) AS c FROM ingresos WHERE feedlot = '$feedlot'";
+            if($qf = $conexion->query($sqlFallback)) {
+                $rf = $qf->fetch_assoc();
+                $cantIngConStockInicial = (int)($rf['c'] ?? 0);
+            }
+        }
 
         // Ingresos (excluyendo Stock Inicial)
         $sqlIng = "SELECT cantidad, pesoPromedio FROM registroingresos WHERE feedlot = '$feedlot' AND tropa != 'Stock Inicial'";
@@ -34,8 +43,21 @@ class StockService {
                 $kgMaxIng = ($kgMaxIng < $pesoPromedio) ? $pesoPromedio : $kgMaxIng;
             }
         }
+        if ($cantIng === 0) {
+            // Fallback: contar y sumar desde tabla base ingresos
+            $sqlIngBase = "SELECT COUNT(*) AS c, SUM(peso) AS pesoTotal, MIN(peso) AS minPeso, MAX(peso) AS maxPeso FROM ingresos WHERE feedlot = '$feedlot' AND tropa != 'Stock Inicial'";
+            if($qb = $conexion->query($sqlIngBase)) {
+                $rb = $qb->fetch_assoc();
+                $cantIng = (int)($rb['c'] ?? 0);
+                $pesoTotalIng = (float)($rb['pesoTotal'] ?? 0);
+                $minPeso = $rb['minPeso'] ?? null;
+                $maxPeso = $rb['maxPeso'] ?? null;
+                if ($minPeso !== null) { $kgMinIng = (float)$minPeso; }
+                if ($maxPeso !== null) { $kgMaxIng = (float)$maxPeso; }
+            }
+        }
 
-        // Egresos
+        // Egresos (agregados); fallback a tabla base si registroegresos está vacío
         $sqlEgr = "SELECT cantidad, pesoPromedio FROM registroegresos WHERE feedlot = '$feedlot'";
         if($queryEgr = $conexion->query($sqlEgr)) {
             while($r = $queryEgr->fetch_assoc()) {
@@ -45,6 +67,19 @@ class StockService {
                 $pesoTotalEgr += ($cantidadEgr * $pesoPromedioEgr);
                 $kgMinEgr = ($kgMinEgr > $pesoPromedioEgr) ? $pesoPromedioEgr : $kgMinEgr;
                 $kgMaxEgr = ($kgMaxEgr < $pesoPromedioEgr) ? $pesoPromedioEgr : $kgMaxEgr;
+            }
+        }
+        if ($cantEgr === 0) {
+            // Fallback: contar y sumar desde tabla base egresos
+            $sqlEgrBase = "SELECT COUNT(*) AS c, SUM(peso) AS pesoTotal, MIN(peso) AS minPeso, MAX(peso) AS maxPeso FROM egresos WHERE feedlot = '$feedlot'";
+            if($qe = $conexion->query($sqlEgrBase)) {
+                $re = $qe->fetch_assoc();
+                $cantEgr = (int)($re['c'] ?? 0);
+                $pesoTotalEgr = (float)($re['pesoTotal'] ?? 0);
+                $minPesoE = $re['minPeso'] ?? null;
+                $maxPesoE = $re['maxPeso'] ?? null;
+                if ($minPesoE !== null) { $kgMinEgr = (float)$minPesoE; }
+                if ($maxPesoE !== null) { $kgMaxEgr = (float)$maxPesoE; }
             }
         }
 
@@ -61,10 +96,9 @@ class StockService {
         $kgIngProm = round($kgIngProm,2);
         $kgEgrProm = round($kgEgrProm,2);
 
-        $stock = 0;
-        if ($cantIngConStockInicial !== 0) { $stock += $cantIngConStockInicial; }
-        if ($cantEgr !== 0 && $stock !== 0) { $stock -= $cantEgr; }
-        if ($cantMuertes !== 0 && $stock !== 0) { $stock -= $cantMuertes; }
+        // Stock = ingresos totales - egresos - muertes (sin condiciones)
+        $stock = $cantIngConStockInicial - $cantEgr - $cantMuertes;
+        if ($stock < 0) { $stock = 0; }
 
         return [
             'cantIng' => $cantIng,
